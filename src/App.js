@@ -15,12 +15,13 @@ function App() {
     const [version,setVersion] = useState('1.0.0');
     const [requestParam,setRequestParam] = useState('GetCapabilities');
     const [id,setId] = useState()
+    const [globalResult,setGlobalResult] = useState()
 
     const request = () => {
     console.log(url)
     axios.get(`${url}`,{
         headers:{
-        "Content-type": "text/html",
+        "Content-type": "text/xml",
         },
         params:{
             'service': service,
@@ -29,8 +30,9 @@ function App() {
         }
     })
         // .elements[0].elements[0].elements[0].text
-        .then((response) => {
+        .then(async (response) => {
                 res = xml2js(response.data).elements[0].elements[3].elements
+                // setResult(response.data)
             simpleNamingOfProcessors(res)
             console.log(xml2js(response.data).elements[0].elements[3].elements)
         })
@@ -47,19 +49,36 @@ function App() {
     }
 
     useEffect(()=>{
-        axios.get(`${url}`,{
+        axios.get(`${url}`,{'data': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            <wps:Execute service="WPS" version="1.0.0" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wps/1.0.0
+        http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd">
+            <ows:Identifier>r.to.vect</ows:Identifier>
+        <wps:DataInputs>
+            <wps:Input>
+                <ows:Identifier xmlns:ns1="http://www.opengis.net/ows/1.1">input</ows:Identifier>
+                <wps:Reference xlink:href="https://figshare.com/ndownloader/files/10144938" mimeType="image/tiff" />
+            </wps:Input>
+        </wps:DataInputs>
+        <wps:ResponseForm>
+            <wps:RawDataOutput mimeType="application/x-zipped-shp">
+                <ows:Identifier>output</ows:Identifier>
+            </wps:RawDataOutput>
+        </wps:ResponseForm>
+    </wps:Execute>`}
+            ,{
             headers:{
-                "Content-type": "text/html",
+                "Content-type": "text/xml",
             },
             params:{
                 'service': service,
                 'version': version,
-                'request': 'DescribeProcess',
+                'request': requestParam,
                 'identifier': id,
-            }
+            },
         })
             .then((response) => {
-                console.log(xml2json(response.data))
+                setGlobalResult(response.data)
+                console.log(response.data)
             })
             .catch((e) => {
                 console.log(e.message)
@@ -80,11 +99,11 @@ function App() {
                         result.map((item,index) =>(
                             <option value={item} onClick={(e) => {
                                 setId(e.target.value);
-
                             }}>{item}</option>
                         ))
                     }
                 </select>
+                {globalResult ? globalResult : null}
                 {/*<input list={"browsers"} type={"text"}*/}
                 {/*        placeholder={'Введите название и выберите регион'}*/}
                 {/*        // value={url}*/}
